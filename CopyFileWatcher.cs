@@ -1,3 +1,6 @@
+//----------------------------------------------------------------------------//
+//   Aplicativo para monitorar pasta e copiar arquivos criados gerando um log //
+//----------------------------------------------------------------------------//
 using System;
 using System.Collections.Generic;
 using System.Linq;
