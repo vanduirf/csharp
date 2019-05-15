@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 namespace FileWatcher
 {
@@ -13,24 +14,41 @@ namespace FileWatcher
     {
         private static void Watcher()
         {
-            using (FileSystemWatcher watcher = new FileSystemWatcher())
-            {
-                watcher.Path = @"E:\EsalesXml\pedido";
-                watcher.NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-                watcher.Created += OnChanged;                
+                FileSystemWatcher watcher = new FileSystemWatcher(@"C:\teste\");  
                 watcher.EnableRaisingEvents = true;
+                watcher.Created += new FileSystemEventHandler(ArquivoCriado);
                 Console.WriteLine("Aperte e para parar o programa.");
-                while (Console.Read() != 'e') ;
+                while (Console.Read() != 'e');            
+        }
+        private static void ArquivoCriado(object sender, FileSystemEventArgs e)
+        {
+            if (CheckArquivoCopiado(e.FullPath))
+            {
+                Console.WriteLine($"Copiando: {e.FullPath}");
+                File.Copy(e.FullPath, @"C:\teste2\" + e.Name);
+                StreamWriter writer = new StreamWriter(@"C:\Logs\log.txt", true);
+                writer.WriteLine("Arquivo copiado: " + e.Name + " em " + System.DateTime.Now);
+                writer.Flush();
+                writer.Close();
             }
         }
-        private static void OnChanged(object source, FileSystemEventArgs e)
-        {            
-            Console.WriteLine($"Copiando: {e.FullPath}");
-            File.Copy(e.FullPath, @"\\kundenbd\KUNDEN\XML_PEDIDOS\TESTE\" + e.Name);
-            StreamWriter writer = new StreamWriter(@"\\kundenbd\KUNDEN\XML_PEDIDOS\log_copia_xml.txt", true);
-            writer.WriteLine("Arquivo copiado: " + e.Name + " em " + System.DateTime.Now);
-            writer.Flush();
-            writer.Close();
+        private static bool CheckArquivoCopiado(string FilePath)
+        {
+            try
+            {
+                if (File.Exists(FilePath))
+                    using (File.OpenRead(FilePath))
+                    {
+                        return true;
+                    }
+                else
+                    return false;
+            }
+            catch (Exception)
+            {
+                Thread.Sleep(100);
+                return CheckArquivoCopiado(FilePath);
+            }
         }
         static void Main(string[] args)
         {
